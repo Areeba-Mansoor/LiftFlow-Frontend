@@ -1,7 +1,7 @@
 import { CheckCircle, Clock, AlertTriangle } from 'lucide-react';
 
 export default function TicketCard({ ticket, role, onUpdateStatus }) {
-  // Status ke hisab se colors set karne ka helper function
+ 
   const getStatusBadge = (status) => {
     switch (status) {
       case 'Pending':

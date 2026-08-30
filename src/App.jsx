@@ -41,7 +41,6 @@ function AppRoutes() {
       <Route path="/register" element={<Register />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
-      <Route path="/reset-password/:token" element={<ResetPassword />} />
 
       {/* Customer Route */}
       <Route path="/customer-dashboard" element={

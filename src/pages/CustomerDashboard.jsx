@@ -3,15 +3,31 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import API from '../services/api';
 import CustomerSidebar from '../components/CustomerSidebar';
-import { PlusCircle, Clock, CheckCircle2, Ticket, LogOut } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
+import { PlusCircle, Clock, CheckCircle2, Ticket, Menu } from 'lucide-react';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  CartesianGrid
+} from 'recharts';
 
 export default function CustomerDashboard() {
   const [tickets, setTickets] = useState([]);
-  const [form, setForm] = useState({ title: '', description: '', category: 'Water Tanker', priority: 'Medium' });
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  const [form, setForm] = useState({
+    title: '',
+    description: '',
+    category: 'Water Tanker',
+    priority: 'Medium'
+  });
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  
+
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -32,12 +48,22 @@ export default function CustomerDashboard() {
     e.preventDefault();
     setError('');
     setLoading(true);
+
     try {
       await API.post('/tickets', form);
-      setForm({ title: '', description: '', category: 'Water Tanker', priority: 'Medium' });
+
+      setForm({
+        title: '',
+        description: '',
+        category: 'Water Tanker',
+        priority: 'Medium'
+      });
+
       fetchTickets();
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to create ticket');
+      setError(
+        err.response?.data?.message || 'Failed to create ticket'
+      );
     } finally {
       setLoading(false);
     }
@@ -45,8 +71,14 @@ export default function CustomerDashboard() {
 
   // Computed metrics for cards
   const totalTickets = tickets.length;
-  const pendingTickets = tickets.filter(t => t.status === 'Pending' || t.status === 'In Progress').length;
-  const resolvedTickets = tickets.filter(t => t.status === 'Resolved').length;
+
+  const pendingTickets = tickets.filter(
+    t => t.status === 'Pending' || t.status === 'In Progress'
+  ).length;
+
+  const resolvedTickets = tickets.filter(
+    t => t.status === 'Resolved'
+  ).length;
 
   // Prepare data for Category Bar Chart
   const categoryCounts = tickets.reduce((acc, t) => {
@@ -56,26 +88,44 @@ export default function CustomerDashboard() {
 
   const chartData = [
     { name: 'Water Tanker', count: categoryCounts['Water Tanker'] || 0 },
+    { name: 'Delivery Issue', count: categoryCounts['Delivery Issue'] || 0 },
     { name: 'Driver Misconduct', count: categoryCounts['Driver Misconduct'] || 0 },
-    { name: 'App Crashes', count: categoryCounts['App Crashes'] || 0 },
-    { name: 'Payment Disputes', count: categoryCounts['Payment Disputes'] || 0 },
-    { name: 'Other', count: categoryCounts['Other'] || 0 },
+    { name: 'Booking Issue', count: categoryCounts['Booking Issue'] || 0 },
+    { name: 'Payment Issue', count: categoryCounts['Payment Issue'] || 0 },
+    { name: 'Refund Issue', count: categoryCounts['Refund Issue'] || 0 },
+    { name: 'App / Technical Issue', count: categoryCounts['App / Technical Issue'] || 0 },
+    { name: 'Other Complaint', count: categoryCounts['Other Complaint'] || 0 }
   ];
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-900 font-sans flex">
-      
-      {/* Alag Sidebar Component */}
-      <CustomerSidebar />
 
-      {/* Main Content Area (ml-64 to adjust for fixed sidebar) */}
-      <main className="flex-1 md:ml-64 p-6 lg:p-8 space-y-6">
-        
-        {/* Header Title */}
-        <div className="flex justify-between items-center bg-white border border-gray-200 px-6 py-4 rounded-2xl shadow-xs">
-          <div>
-            <h1 className="text-xl font-bold tracking-tight text-gray-800">Customer Support Overview</h1>
-            <p className="text-xs text-gray-500 mt-0.5">Welcome back, {user?.name || 'Customer'}! Manage your support tickets and track resolution progress.</p>
+      {/* Sidebar with Mobile Drawer State */}
+      <CustomerSidebar 
+        isOpen={isSidebarOpen} 
+        onClose={() => setIsSidebarOpen(false)} 
+      />
+
+      {/* Main Content Area */}
+      <main className="flex-1 md:ml-64 p-4 lg:p-8 space-y-6">
+
+        {/* Header Title with Hamburger Button for Mobile */}
+        <div className="flex justify-between items-center bg-white border border-gray-200 px-4 md:px-6 py-4 rounded-2xl shadow-xs">
+          <div className="flex items-center gap-3">
+            <button 
+              onClick={() => setIsSidebarOpen(true)}
+              className="p-2 text-gray-700 hover:bg-gray-100 rounded-lg md:hidden cursor-pointer"
+            >
+              <Menu size={20} />
+            </button>
+            <div>
+              <h1 className="text-lg md:text-xl font-bold tracking-tight text-gray-800">
+                Customer Support Overview
+              </h1>
+              <p className="text-xs text-gray-500 mt-0.5 hidden sm:block">
+                Welcome back, {user?.name || 'Customer'}! Manage your support tickets and track resolution progress.
+              </p>
+            </div>
           </div>
         </div>
 
@@ -124,9 +174,7 @@ export default function CustomerDashboard() {
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                 <XAxis dataKey="name" stroke="#94a3b8" fontSize={11} tickLine={false} />
                 <YAxis stroke="#94a3b8" fontSize={11} tickLine={false} allowDecimals={false} />
-                <Tooltip 
-                  contentStyle={{ backgroundColor: '#ffffff', borderColor: '#e2e8f0', borderRadius: '12px', fontSize: '12px', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.05)' }}
-                />
+                <Tooltip contentStyle={{ backgroundColor: '#ffffff', borderColor: '#e2e8f0', borderRadius: '12px', fontSize: '12px', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.05)' }} />
                 <Bar dataKey="count" fill="#d97706" radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
@@ -142,7 +190,9 @@ export default function CustomerDashboard() {
               <PlusCircle className="text-amber-600" size={18} />
               Create New Ticket
             </h2>
+
             {error && <p className="text-red-600 text-xs mb-3 font-medium">{error}</p>}
+
             <form onSubmit={handleSubmit} className="space-y-4 text-xs">
               <div>
                 <label className="block font-medium text-gray-600 mb-1">Ticket Title</label>
@@ -164,10 +214,13 @@ export default function CustomerDashboard() {
                   className="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 outline-none focus:border-amber-500 transition-all text-gray-900 cursor-pointer"
                 >
                   <option value="Water Tanker">Water Tanker</option>
+                  <option value="Delivery Issue">Delivery Issue</option>
                   <option value="Driver Misconduct">Driver Misconduct</option>
-                  <option value="App Crashes">App Crashes</option>
-                  <option value="Payment Disputes">Payment Disputes</option>
-                  <option value="Other">Other</option>
+                  <option value="Booking Issue">Booking Issue</option>
+                  <option value="Payment Issue">Payment Issue</option>
+                  <option value="Refund Issue">Refund Issue</option>
+                  <option value="App / Technical Issue">App / Technical Issue</option>
+                  <option value="Other Complaint">Other Complaint</option>
                 </select>
               </div>
 
